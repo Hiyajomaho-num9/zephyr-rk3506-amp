@@ -1,0 +1,5 @@
+series:
+  - name: rk3506
+    socs:
+      - name: rk3506
+

@@ -1,0 +1,33 @@
+# SPDX-License-Identifier: Apache-2.0
+
+description: |
+  Rockchip RK3506 GPIO IOC/RMIO pin controller.
+
+  Each pinmux entry is encoded with RK3506_PINCTRL(bank, pin, mux, rmio_func):
+    - bank: GPIO0 bank token, RK3506_PINCTRL_BANK_A..D
+    - pin: pin number inside the bank, 0..7
+    - mux: GPIO IOC mux value
+    - rmio_func: RMIO function selector value
+
+compatible: "rockchip,rk3506-pinctrl"
+
+include: base.yaml
+
+properties:
+  reg:
+    required: true
+    description: Base address of GPIO0 IOC registers.
+
+  rmio-base:
+    type: int
+    required: true
+    description: Base address of RMIO selector registers.
+
+child-binding:
+  description: RK3506 pin group.
+
+  properties:
+    pinmux:
+      required: true
+      type: array
+      description: RK3506_PINCTRL(bank, pin, mux, rmio_func) entries.

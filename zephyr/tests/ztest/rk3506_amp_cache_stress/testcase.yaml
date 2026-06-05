@@ -1,0 +1,14 @@
+tests:
+  ztest.rk3506.amp_cache_stress:
+    build_only: true
+    slow: true
+    platform_allow:
+      - ok3506b_s12_amp_uart1
+    integration_platforms:
+      - ok3506b_s12_amp_uart1
+    tags:
+      - rk3506
+      - amp
+      - rpmsg
+      - cache
+      - ztest

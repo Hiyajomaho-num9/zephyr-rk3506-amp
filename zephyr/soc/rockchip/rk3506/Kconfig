@@ -1,0 +1,151 @@
+# SPDX-License-Identifier: Apache-2.0
+
+config SOC_RK3506
+	select ARM
+	select CPU_CORTEX_A7
+	select ARM_ARCH_TIMER
+	select SYS_CLOCK_EXISTS
+	select ARM_AARCH32_MMU
+	select SOC_EARLY_INIT_HOOK
+	select SOC_RESET_HOOK
+
+if SOC_RK3506
+
+config SOC_RK3506_RPMSG_LITE
+	bool "RK3506 RPMsg-Lite platform support"
+	depends on SOC_RK3506
+	help
+	  Build the RK3506-specific RPMsg-Lite platform glue used by
+	  AMP CPU2 firmware. This provides mailbox notification and
+	  address/cache hooks for the RPMsg-Lite stack. Applications still
+	  own endpoint creation and channel policy.
+
+config SOC_RK3506_RPMSG_MBOX_IRQ
+	bool "Use mailbox IRQ for RK3506 RPMsg-Lite notifications"
+	depends on SOC_RK3506_RPMSG_LITE
+	default y
+	help
+	  Enable the CPU2-side mailbox interrupt for Linux-to-Zephyr RPMsg
+	  notifications. The verified RK3506 AMP path uses mailbox2 IRQ 176,
+	  routed to CPU2 as GIC target mask 0x4 and kept in Group0.
+
+config SOC_RK3506_RPMSG_MBOX_BB2_IRQ
+	int "RK3506 mailbox2 BB IRQ number"
+	depends on SOC_RK3506_RPMSG_MBOX_IRQ
+	default 176
+	help
+	  Raw GIC interrupt ID for MAILBOX_BB_2_IRQn on RK3506. This matches
+	  the Rockchip HAL definition and the Linux AMP DTS route entry:
+	  GIC_AMP_IRQ_CFG_ROUTE(176, ... CPU2).
+
+config SOC_RK3506_RPMSG_MBOX_GIC_ROUTE
+	bool "Route RK3506 mailbox2 BB IRQ to AMP CPU2 in GICv2"
+	depends on SOC_RK3506_RPMSG_MBOX_IRQ && GIC_V2
+	default y
+	help
+	  Zephyr's generic GICv2 distributor init does not understand the
+	  RK3506 AMP CPU affinity table used by Linux/RT-Thread. Re-apply the
+	  mailbox IRQ target byte after IRQ_CONNECT so Linux-to-CPU2 mailbox
+	  notifications can arrive as real IRQs instead of relying on polling.
+
+config SOC_RK3506_RPMSG_MBOX_GIC_TARGET_MASK
+	hex "RK3506 mailbox2 BB IRQ GICv2 target mask"
+	depends on SOC_RK3506_RPMSG_MBOX_GIC_ROUTE
+	default 0x4
+	help
+	  GICD_ITARGETSR byte for MAILBOX_BB_2_IRQn. Linux AMP DTS maps
+	  CPU affinity 2 to cpumask 0x4 via amp-cpu-aff-maskbits, and routes
+	  IRQ 176 with GIC_AMP_IRQ_CFG_ROUTE(176, 0xd0, CPU2).
+
+config SOC_RK3506_RPMSG_MBOX_GIC_GROUP1
+	bool "Mark RK3506 mailbox2 BB IRQ as GIC Group1"
+	depends on SOC_RK3506_RPMSG_MBOX_IRQ && GIC_V2
+	default n
+	help
+	  Diagnostic-only switch. Phase 4.6 verified that RK3506 CPU2
+	  receives mailbox2 BB IRQ 176 in Group0, matching the RT-Thread
+	  baseline. Leave this disabled for the normal BSP path.
+
+config SOC_RK3506_RPMSG_IRQ_ONLY_AFTER_NS
+	bool "Stop RPMsg polling after namespace announce"
+	depends on SOC_RK3506_RPMSG_LITE
+	default y
+	help
+	  Verified RK3506 BSP mode: use polling only during link-up and
+	  namespace announce, then rely on the mailbox IRQ path for Linux-to-
+	  Zephyr RPMsg notifications.
+
+config SOC_RK3506_RPMSG_KEEP_IRQ_ENABLE
+	bool "Periodically re-enable RK3506 mailbox IRQ"
+	depends on SOC_RK3506_RPMSG_MBOX_IRQ
+	default n
+	help
+	  Diagnostic-only guard used to prove whether another path masks the
+	  shared physical mailbox IRQ after link-up. Production BSP code should
+	  leave this disabled once the one-shot enable sequence is verified.
+
+config SOC_RK3506_BOOT_BANNER
+	bool "Print RK3506 AMP boot banners"
+	depends on SOC_RK3506
+	default y
+	help
+	  Print one-shot boot, RPMsg link, and namespace announce messages.
+	  This is intentionally much quieter than SOC_RK3506_RPMSG_DEBUG_LOG and is
+	  useful for board bring-up without enabling periodic diagnostics.
+
+config SOC_RK3506_AMP_DIAGNOSTICS
+	bool "Enable RK3506 AMP diagnostic features"
+	depends on SOC_RK3506
+	default n
+	help
+	  Master switch for validation-only features such as the shared-memory
+	  probe, verbose heartbeat logging, and private cache-thrash testing.
+	  Keep this disabled for the normal BSP image.
+
+config SOC_RK3506_AMP_PROBE
+	bool "Expose RK3506 AMP bring-up status in shared memory"
+	depends on SOC_RK3506_RPMSG_LITE && SOC_RK3506_AMP_DIAGNOSTICS
+	default y if SOC_RK3506_AMP_DIAGNOSTICS
+	help
+	  Write a compact diagnostic structure at 0x03b00000. This is useful
+	  for Phase 4/5 validation from Linux with devmem. It is not part of
+	  the normal production RPMsg ABI.
+
+config SOC_RK3506_PRIVATE_ICACHE
+	bool "Enable RK3506 CPU2 private instruction cache"
+	depends on SOC_RK3506
+	default n
+	help
+	  Phase 5.3 validation switch. Enable only the CPU2 instruction cache
+	  while keeping D-cache disabled and keeping AMP/RPMsg shared memory
+	  mapped as strongly ordered. This isolates private instruction-cache
+	  enablement from shared-memory coherency risk.
+
+config SOC_RK3506_PRIVATE_DCACHE
+	bool "Enable RK3506 CPU2 private data cache"
+	depends on SOC_RK3506_PRIVATE_ICACHE
+	default n
+	help
+	  Phase 5.5 validation switch. Enable CPU2 D-cache only after the
+	  Phase 5.4 preflight proves that AMP/RPMsg shared memory is explicitly
+	  mapped strongly ordered. Keep this disabled for conservative images.
+
+config SOC_RK3506_CACHE_THRASH
+	bool "Run RK3506 private D-cache thrash workload"
+	depends on SOC_RK3506_AMP_DIAGNOSTICS && SOC_RK3506_PRIVATE_DCACHE
+	default n
+	help
+	  Start a validation-only thread that continuously mutates private
+	  cacheable memory while RPMsg is active. This was used by Phase 5.6/5.7
+	  to prove that private D-cache enablement does not corrupt strongly
+	  ordered AMP/RPMsg shared memory.
+
+config SOC_RK3506_RPMSG_DEBUG_LOG
+	bool "Verbose RK3506 RPMsg packet and heartbeat logging"
+	depends on SOC_RK3506_RPMSG_LITE && SOC_RK3506_AMP_DIAGNOSTICS
+	default n
+	help
+	  Print heartbeat GIC state and per-packet RPMsg payloads. Keep this
+	  disabled by default after the IRQ path has been verified.
+
+endif # SOC_RK3506

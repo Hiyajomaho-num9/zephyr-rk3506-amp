@@ -1,0 +1,58 @@
+#!/bin/sh
+TARGET=$1
+DIR=build-"$TARGET"
+CONFIGURE=do-"$TARGET"-configure
+shift
+
+for p in /opt/*/bin /opt/*/models/*; do
+    PATH="$p":$PATH
+done
+
+# We can't use both the analyzer and sanitizer because
+# the analyzer is run after the sanitizer and generates a lot
+# of false positives, so just use the sanitizer as it
+# appears to find more relevant bugs at this point.
+
+SANITIZER="-Db_sanitize=undefined"
+
+# Use traps with the sanitizer on msp430 as the handlers make many
+# tests too large
+
+case "$TARGET" in
+    *msp430*)
+	SANITIZER="$SANITIZER -Dsanitize-trap-on-error=true"
+	;;
+esac
+
+# Disable the sanitizer when not using tinystdio as the stdio code is
+# full of problems
+
+case "$*" in
+    *-Dtinystdio=false*)
+	SANITIZER=""
+	;;
+esac
+
+mkdir "$DIR"
+trap 'rm -rf "$DIR"' 0 1 15
+(cd "$DIR" || exit 1
+ echo '##################################################'
+ echo '##########' ../scripts/"$CONFIGURE" -Dwerror=true $SANITIZER "$@"
+ echo '##################################################'
+ ../scripts/"$CONFIGURE" -Dwerror=true $SANITIZER "$@"
+ case $? in
+     0)
+	 echo 'Configuration succeeded'
+	 ;;
+     77)
+	 echo 'Configuration skipped'
+	 exit 0
+	 ;;
+     *)
+	 echo 'Configuration failed with' "$?"
+	 cat meson-logs/*
+	 exit 1
+	 ;;
+ esac
+ cat meson-logs/*
+ ninja && meson test -t 20 -v) || exit 1

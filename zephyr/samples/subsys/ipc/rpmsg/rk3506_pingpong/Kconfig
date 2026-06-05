@@ -1,0 +1,5 @@
+# SPDX-License-Identifier: Apache-2.0
+
+mainmenu "RK3506 RPMsg pingpong sample"
+
+source "Kconfig.zephyr"

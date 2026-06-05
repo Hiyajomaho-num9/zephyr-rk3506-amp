@@ -1,0 +1,33 @@
+# Build outputs
+/build/
+/out/
+/output/
+/zephyr/build/
+/zephyr/build-*/
+/zephyr/build_*/
+/zephyr/twister-out/
+/zephyr/.cache/
+/linux/build/
+/linux/out/
+/linux/output/
+
+# Local firmware/images/maps/logs
+/*.bin
+/*.elf
+/*.hex
+/*.map
+/*.img
+/*.log
+/*.dmesg
+
+# Linux userspace tool build outputs
+/linux/tools/rk3506_rpmsg_char_ping/rk3506_rpmsg_can
+/linux/tools/rk3506_rpmsg_char_ping/rk3506_rpmsg_can_tx
+/linux/tools/rk3506_rpmsg_char_ping/rk3506_rpmsg_char_ping
+/linux/tools/rk3506_rpmsg_char_ping/rk3506_rpmsg_char_stress
+/linux/tools/rk3506_rpmsg_char_ping/rk3506_socketcan_send
+
+# Editor/temporary files
+*~
+*.swp
+*.tmp

@@ -1,0 +1,51 @@
+# SPDX-License-Identifier: Apache-2.0
+
+description: Rockchip RK3506 CAN controller
+
+compatible: "rockchip,rk3506-canfd"
+
+include:
+  - can-controller.yaml
+  - pinctrl-device.yaml
+
+properties:
+  reg:
+    required: true
+
+  interrupts:
+    required: true
+
+  clock-frequency:
+    type: int
+    required: true
+    description: |
+      Functional CAN clock frequency in Hz.  RK3506 Linux DTS assigns
+      CLK_CAN0/CLK_CAN1 to 300 MHz.
+
+  clocks:
+    required: true
+
+  clock-names:
+    type: string-array
+    required: true
+    description: |
+      Linux-compatible clock names.  RK3506 uses "baudclk" and "apb_pclk".
+
+  resets:
+    type: phandle-array
+    required: true
+    description: Reset phandles for the CAN core and APB reset lines.
+
+  reset-names:
+    type: string-array
+    required: true
+    description: |
+      Linux-compatible reset names.  RK3506 uses "can" and "can-apb".
+
+  rx-max-filters:
+    type: int
+    default: 5
+    description: |
+      RK3506 hardware has five acceptance-filter groups.  The current
+      driver uses accept-all hardware filtering plus Zephyr software filters
+      for the board-validated Classical CAN subset.

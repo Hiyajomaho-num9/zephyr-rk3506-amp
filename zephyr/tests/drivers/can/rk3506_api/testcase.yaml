@@ -1,0 +1,12 @@
+common:
+  tags:
+    - drivers
+    - can
+  depends_on: can
+tests:
+  drivers.can.api.rk3506:
+    filter: dt_chosen_enabled("zephyr,canbus")
+    platform_allow:
+      - ok3506b_s12_amp_uart1/rk3506
+    integration_platforms:
+      - ok3506b_s12_amp_uart1/rk3506
