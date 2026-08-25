@@ -1,0 +1,15 @@
+/*
+ * Copyright (c) 2026
+ *
+ * SPDX-License-Identifier: Apache-2.0
+ */
+
+#ifndef ZEPHYR_INCLUDE_DT_BINDINGS_CLOCK_RK3506_CRU_H_
+#define ZEPHYR_INCLUDE_DT_BINDINGS_CLOCK_RK3506_CRU_H_
+
+#define HCLK_CAN0 145
+#define CLK_CAN0  146
+#define HCLK_CAN1 147
+#define CLK_CAN1  148
+
+#endif /* ZEPHYR_INCLUDE_DT_BINDINGS_CLOCK_RK3506_CRU_H_ */

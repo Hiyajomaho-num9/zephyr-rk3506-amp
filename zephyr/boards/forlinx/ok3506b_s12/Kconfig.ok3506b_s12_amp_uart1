@@ -1,0 +1,4 @@
+# SPDX-License-Identifier: Apache-2.0
+
+config BOARD_OK3506B_S12_AMP_UART1
+	select SOC_RK3506

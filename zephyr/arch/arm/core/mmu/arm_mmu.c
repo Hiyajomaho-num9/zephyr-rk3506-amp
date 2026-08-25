@@ -854,7 +854,9 @@ int z_arm_mmu_init(void)
 	reg_val  = __get_SCTLR();
 	reg_val |= ARM_MMU_SCTLR_AFE_BIT;
 	reg_val |= ARM_MMU_SCTLR_ICACHE_ENABLE_BIT;
+#if !defined(CONFIG_RK3506_PRIVATE_ICACHE)
 	reg_val |= ARM_MMU_SCTLR_DCACHE_ENABLE_BIT;
+#endif
 	reg_val |= ARM_MMU_SCTLR_MMU_ENABLE_BIT;
 	__set_SCTLR(reg_val);
 

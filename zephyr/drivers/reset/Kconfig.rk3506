@@ -1,0 +1,11 @@
+# SPDX-License-Identifier: Apache-2.0
+
+config RESET_RK3506_CRU
+	bool "Rockchip RK3506 CRU reset controller"
+	default y
+	depends on RESET
+	depends on SOC_RK3506
+	depends on DT_HAS_ROCKCHIP_RK3506_CRU_RESET_ENABLED
+	help
+	  Enable minimal RK3506 CRU reset control.  The initial implementation
+	  covers the CAN reset lines used by the OK3506B-S12 AMP BSP.
