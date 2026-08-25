@@ -1,6 +1,0 @@
-board:
-  name: ok3506b_s12_amp_uart1
-  full_name: Forlinx OK3506B-S12 AMP UART1 CPU2
-  vendor: forlinx
-  socs:
-    - name: rk3506

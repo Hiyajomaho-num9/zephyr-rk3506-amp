@@ -1,4 +1,0 @@
-series:
-- name: sun8i
-  socs:
-  - name: sun8i_h3

@@ -1,7 +1,0 @@
-board:
-  name: beagleplay
-  full_name: BeaglePlay
-  vendor: beagle
-  socs:
-  - name: cc1352p7
-  - name: am6254

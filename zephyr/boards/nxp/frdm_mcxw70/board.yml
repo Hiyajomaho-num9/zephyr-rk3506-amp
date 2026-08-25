@@ -1,6 +1,0 @@
-board:
-  name: frdm_mcxw70
-  full_name: FRDM-MCXW70
-  vendor: nxp
-  socs:
-    - name: mcxw70ac

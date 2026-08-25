@@ -1,6 +1,0 @@
-board:
-  name: shrike_lite
-  full_name: Shrike-lite
-  vendor: vicharak
-  socs:
-  - name: rp2040
