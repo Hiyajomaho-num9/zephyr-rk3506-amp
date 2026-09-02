@@ -1,0 +1,38 @@
+# Copyright (c) 2026
+# SPDX-License-Identifier: Apache-2.0
+
+description: |
+  Rockchip RK3506 GPIO bank.
+
+  Each bank exposes 32 pins. The SoC has five banks:
+    gpio0 @ 0xff940000 (PMU domain)
+    gpio1 @ 0xff870000
+    gpio2 @ 0xff1c0000
+    gpio3 @ 0xff1d0000
+    gpio4 @ 0xff1e0000
+
+compatible: "rockchip,rk3506-gpio"
+
+include: [gpio-controller.yaml, base.yaml]
+
+properties:
+  reg:
+    required: true
+
+  interrupts:
+    required: true
+
+  clocks:
+    required: true
+
+  "#gpio-cells":
+    const: 2
+
+  ngpios:
+    type: int
+    required: true
+    description: Number of GPIOs available in this bank (32).
+
+gpio-cells:
+  - pin
+  - flags

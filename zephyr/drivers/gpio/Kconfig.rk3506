@@ -1,0 +1,22 @@
+# RK3506 GPIO configuration options
+
+# Copyright (c) 2026
+# SPDX-License-Identifier: Apache-2.0
+
+config GPIO_RK3506
+	bool "Rockchip RK3506 GPIO driver"
+	default y
+	depends on DT_HAS_ROCKCHIP_RK3506_GPIO_ENABLED
+	depends on SOC_RK3506
+	select CLOCK_CONTROL
+	help
+	  Enable GPIO driver for Rockchip RK3506.
+
+config GPIO_RK3506_INIT_PRIORITY
+	int "RK3506 GPIO driver init priority"
+	default 45
+	depends on GPIO_RK3506
+	help
+	  RK3506 GPIO device initialization priority. Must be higher than
+	  the clock control driver init priority so that the GPIO banks can
+	  request their pclk gate release during init.

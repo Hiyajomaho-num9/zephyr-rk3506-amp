@@ -12,4 +12,11 @@
 #define HCLK_CAN1 147
 #define CLK_CAN1  148
 
+/* GPIO bus clock gates (pclk domain). */
+#define HCLK_GPIO0 150
+#define HCLK_GPIO1 151
+#define HCLK_GPIO2 152
+#define HCLK_GPIO3 153
+#define HCLK_GPIO4 154
+
 #endif /* ZEPHYR_INCLUDE_DT_BINDINGS_CLOCK_RK3506_CRU_H_ */

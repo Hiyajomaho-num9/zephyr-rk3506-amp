@@ -18,6 +18,10 @@
 #define RK3506_CRU_CLKSEL_CON35 0x38cU
 #define RK3506_CRU_CLKSEL_CON36 0x390U
 #define RK3506_CRU_CLKGATE_CON13 0x834U
+#define RK3506_CRU_CLKGATE_CON03 0x80cU
+#define RK3506_CRU_CLKGATE_CON12 0x830U
+#define RK3506_CRU_PMU_BASE      0xff9b0000U
+#define RK3506_CRU_PMU_GATE_CON00 0x800U
 
 #define RK3506_CAN0_MUX_SHIFT 11U
 #define RK3506_CAN0_MUX_MASK GENMASK(13, 11)
@@ -98,6 +102,34 @@ static int rk3506_cru_clock_on(const struct device *dev, clock_control_subsys_t 
 	case CLK_CAN1:
 		gate_bit = 7U;
 		break;
+	/*
+	 * GPIO pclk gates live in different gate registers:
+	 *   gpio0 -> CRU_PMU_GATE_CON00.bit8 (PMU CRU @ 0xff9b0000)
+	 *   gpio1 -> CRU_GATE_CON03.bit8
+	 *   gpio2 -> CRU_GATE_CON12.bit14
+	 *   gpio3 -> CRU_GATE_CON13.bit0
+	 *   gpio4 -> CRU_GATE_CON13.bit2
+	 */
+	case HCLK_GPIO0:
+		rk3506_cru_write_mask(RK3506_CRU_PMU_BASE,
+				      RK3506_CRU_PMU_GATE_CON00, BIT(8), 0U);
+		return 0;
+	case HCLK_GPIO1:
+		rk3506_cru_write_mask(config->base, RK3506_CRU_CLKGATE_CON03,
+				      BIT(8), 0U);
+		return 0;
+	case HCLK_GPIO2:
+		rk3506_cru_write_mask(config->base, RK3506_CRU_CLKGATE_CON12,
+				      BIT(14), 0U);
+		return 0;
+	case HCLK_GPIO3:
+		rk3506_cru_write_mask(config->base, RK3506_CRU_CLKGATE_CON13,
+				      BIT(0), 0U);
+		return 0;
+	case HCLK_GPIO4:
+		rk3506_cru_write_mask(config->base, RK3506_CRU_CLKGATE_CON13,
+				      BIT(2), 0U);
+		return 0;
 	default:
 		return -ENOTSUP;
 	}
