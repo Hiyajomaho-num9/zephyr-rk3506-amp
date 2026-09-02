@@ -73,7 +73,7 @@ extern "C" {
 			COND_CODE_1(DT_PROP(node_id, mipi_cpol), SPI_MODE_CPOL, (0)) |	\
 			COND_CODE_1(DT_PROP(node_id, mipi_cpha), SPI_MODE_CPHA, (0)) |	\
 			COND_CODE_1(DT_PROP(node_id, mipi_hold_cs), SPI_HOLD_ON_CS, (0)),	\
-		.slave = DT_REG_ADDR(node_id),				\
+		.peripheral = DT_REG_ADDR(node_id),				\
 		.cs = {									\
 			COND_CODE_1(DT_SPI_HAS_CS_GPIOS(MIPI_DBI_DT_SPI_DEV(node_id)),	\
 			(MIPI_DBI_SPI_CS_CONTROL_INIT_GPIO(node_id, delay_)),		\
@@ -270,8 +270,7 @@ static inline int mipi_dbi_command_write(const struct device *dev,
 					 uint8_t cmd, const uint8_t *data,
 					 size_t len)
 {
-	const struct mipi_dbi_driver_api *api =
-		(const struct mipi_dbi_driver_api *)dev->api;
+	const struct mipi_dbi_driver_api *api = DEVICE_API_GET(mipi_dbi, dev);
 
 	if (api->command_write == NULL) {
 		return -ENOSYS;
@@ -301,8 +300,7 @@ static inline int mipi_dbi_command_read(const struct device *dev,
 					uint8_t *cmds, size_t num_cmd,
 					uint8_t *response, size_t len)
 {
-	const struct mipi_dbi_driver_api *api =
-		(const struct mipi_dbi_driver_api *)dev->api;
+	const struct mipi_dbi_driver_api *api = DEVICE_API_GET(mipi_dbi, dev);
 
 	if (api->command_read == NULL) {
 		return -ENOSYS;
@@ -335,8 +333,7 @@ static inline int mipi_dbi_write_display(const struct device *dev,
 					 struct display_buffer_descriptor *desc,
 					 enum display_pixel_format pixfmt)
 {
-	const struct mipi_dbi_driver_api *api =
-		(const struct mipi_dbi_driver_api *)dev->api;
+	const struct mipi_dbi_driver_api *api = DEVICE_API_GET(mipi_dbi, dev);
 
 	if (api->write_display == NULL) {
 		return -ENOSYS;
@@ -357,8 +354,7 @@ static inline int mipi_dbi_write_display(const struct device *dev,
  */
 static inline int mipi_dbi_reset(const struct device *dev, uint32_t delay_ms)
 {
-	const struct mipi_dbi_driver_api *api =
-		(const struct mipi_dbi_driver_api *)dev->api;
+	const struct mipi_dbi_driver_api *api = DEVICE_API_GET(mipi_dbi, dev);
 
 	if (api->reset == NULL) {
 		return -ENOSYS;
@@ -386,8 +382,7 @@ static inline int mipi_dbi_reset(const struct device *dev, uint32_t delay_ms)
 static inline int mipi_dbi_release(const struct device *dev,
 				   const struct mipi_dbi_config *config)
 {
-	const struct mipi_dbi_driver_api *api =
-		(const struct mipi_dbi_driver_api *)dev->api;
+	const struct mipi_dbi_driver_api *api = DEVICE_API_GET(mipi_dbi, dev);
 
 	if (api->release == NULL) {
 		return -ENOSYS;
@@ -425,8 +420,7 @@ static inline int mipi_dbi_configure_te(const struct device *dev,
 					uint8_t edge,
 					uint32_t delay_us)
 {
-	const struct mipi_dbi_driver_api *api =
-		(const struct mipi_dbi_driver_api *)dev->api;
+	const struct mipi_dbi_driver_api *api = DEVICE_API_GET(mipi_dbi, dev);
 
 	if (api->configure_te == NULL) {
 		return -ENOSYS;

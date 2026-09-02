@@ -18,7 +18,7 @@
  * @brief Interfaces for display controllers.
  * @defgroup display_interface Display
  * @since 1.14
- * @version 0.9.0
+ * @version 0.10.0
  * @ingroup io_interfaces
  * @{
  *
@@ -216,10 +216,36 @@ enum display_pixel_format {
 	PIXEL_FORMAT_BGRA_8888 = BIT(12), /**< 32-bit BGRA */
 
 	/**
-	 * This and higher values are display specific.
-	 * Refer to the display header file.
+	 * @brief 4-bit indexed color format with 2 pixels packed per byte.
+	 *
+	 * Below shows how data are organized in memory.
+	 *
+	 * @code{.unparsed}
+	 *   Byte 0   | Byte 1   |
+	 *   7......0   7......0
+	 * | IiiiJjjj | KkkkLlll | ...
+	 * @endcode
+	 *
+	 * The high nibble stores the left pixel and the low nibble stores the
+	 * right pixel. Palette semantics are display-specific.
 	 */
-	PIXEL_FORMAT_PRIV_START = (PIXEL_FORMAT_BGRA_8888 << 1),
+	PIXEL_FORMAT_I_4 = BIT(13), /**< Packed 4-bit indexed color */
+
+	/**
+	 * @brief 4-bit greyscale format with 2 pixels packed per byte.
+	 *
+	 * Below shows how data are organized in memory.
+	 *
+	 * @code{.unparsed}
+	 *   Byte 0   | Byte 1   |
+	 *   7......0   7......0
+	 * | GgggHhhh | IiiiJjjj | ...
+	 * @endcode
+	 *
+	 * The high nibble stores the left pixel and the low nibble stores the
+	 * right pixel.
+	 */
+	PIXEL_FORMAT_L_4 = BIT(14), /**< Packed 4-bit Grayscale/Luminance */
 };
 
 /**
@@ -227,8 +253,7 @@ enum display_pixel_format {
  *
  * This macro expands to the number of bits required for a given display
  * format. It can be used to allocate a framebuffer based on a given
- * display format type. This does not work with any private
- * pixel formats.
+ * display format type
  */
 #define DISPLAY_BITS_PER_PIXEL(fmt)						\
 	((((fmt & PIXEL_FORMAT_RGB_888) >> 0) * 24U) +				\
@@ -243,7 +268,10 @@ enum display_pixel_format {
 	(((fmt & PIXEL_FORMAT_BGR_888) >> 9) * 24U) +				\
 	(((fmt & PIXEL_FORMAT_ABGR_8888) >> 10) * 32U) +			\
 	(((fmt & PIXEL_FORMAT_RGBA_8888) >> 11) * 32U) +			\
-	(((fmt & PIXEL_FORMAT_BGRA_8888) >> 12) * 32U))
+	(((fmt & PIXEL_FORMAT_BGRA_8888) >> 12) * 32U) +			\
+	(((fmt & PIXEL_FORMAT_I_4) >> 13) * 4U) +				\
+	(((fmt & PIXEL_FORMAT_L_4) >> 14) * 4U))
+
 /**
  * @brief Display screen information
  */
@@ -282,6 +310,22 @@ enum display_orientation {
 	DISPLAY_ORIENTATION_ROTATED_270, /**< Rotated 270 degrees clockwise */
 };
 
+#if defined(CONFIG_DISPLAY_COLOR_PALETTE) || defined(__DOXYGEN__)
+
+/** @brief Structure representing a color palette entry in ARGB8888 format. */
+struct display_palette_color {
+	/** Blue component (0-255) */
+	uint8_t b;
+	/** Green component (0-255) */
+	uint8_t g;
+	/** Red component (0-255) */
+	uint8_t r;
+	/** Alpha component (0-255) */
+	uint8_t a;
+};
+
+#endif /* defined(CONFIG_DISPLAY_COLOR_PALETTE) || defined(__DOXYGEN__) */
+
 /** @brief Structure holding display capabilities. */
 struct display_capabilities {
 	/** Display resolution in the X direction */
@@ -296,6 +340,12 @@ struct display_capabilities {
 	enum display_pixel_format current_pixel_format;
 	/** Current display orientation */
 	enum display_orientation current_orientation;
+	/** Supported callback events mask, 0 when event callback unsupported */
+	uint32_t supported_events;
+#if defined(CONFIG_DISPLAY_COLOR_PALETTE) || defined(__DOXYGEN__)
+	/** Color palette supported by the display, indexed by pixel value */
+	struct display_palette_color color_palette[CONFIG_DISPLAY_COLOR_PALETTE_MAX_SIZE];
+#endif /* defined(CONFIG_DISPLAY_COLOR_PALETTE) || defined(__DOXYGEN__) */
 };
 
 /** @brief Structure to describe display data buffer layout */
@@ -335,6 +385,10 @@ enum display_event {
 	DISPLAY_EVENT_VSYNC = BIT(1),
 	/** Fired when a frame transfer to the panel or frame buffer update completes */
 	DISPLAY_EVENT_FRAME_DONE = BIT(2),
+	/** Fired when a FIFO underflow occurs.
+	 *  Checked in some UI frameworks such as Qt Ultralite
+	 */
+	DISPLAY_EVENT_FIFO_UNDERFLOW = BIT(3),
 };
 
 /** @brief Display event callback return flags. */
@@ -348,7 +402,6 @@ enum display_event_result {
 };
 
 /**
- * @typedef display_event_cb_t.
  *
  * @brief Called either in ISR context (if arg in_isr=true at register time,
  * see @ref display_register_event_cb ) or in thread context (if in_isr=false,
@@ -545,10 +598,7 @@ static inline int display_write(const struct device *dev, const uint16_t x,
 				const struct display_buffer_descriptor *desc,
 				const void *buf)
 {
-	struct display_driver_api *api =
-		(struct display_driver_api *)dev->api;
-
-	return api->write(dev, x, y, desc, buf);
+	return DEVICE_API_GET(display, dev)->write(dev, x, y, desc, buf);
 }
 
 /**
@@ -568,8 +618,7 @@ static inline int display_read(const struct device *dev, const uint16_t x,
 			       const struct display_buffer_descriptor *desc,
 			       void *buf)
 {
-	struct display_driver_api *api =
-		(struct display_driver_api *)dev->api;
+	const struct display_driver_api *api = DEVICE_API_GET(display, dev);
 
 	if (api->read == NULL) {
 		return -ENOSYS;
@@ -588,8 +637,7 @@ static inline int display_read(const struct device *dev, const uint16_t x,
  */
 static inline int display_clear(const struct device *dev)
 {
-	struct display_driver_api *api =
-		(struct display_driver_api *)dev->api;
+	const struct display_driver_api *api = DEVICE_API_GET(display, dev);
 
 	if (api->clear == NULL) {
 		return -ENOSYS;
@@ -609,8 +657,7 @@ static inline int display_clear(const struct device *dev)
  */
 static inline void *display_get_framebuffer(const struct device *dev)
 {
-	struct display_driver_api *api =
-		(struct display_driver_api *)dev->api;
+	const struct display_driver_api *api = DEVICE_API_GET(display, dev);
 
 	if (api->get_framebuffer == NULL) {
 		return NULL;
@@ -640,8 +687,7 @@ static inline void *display_get_framebuffer(const struct device *dev)
  */
 static inline int display_blanking_on(const struct device *dev)
 {
-	struct display_driver_api *api =
-		(struct display_driver_api *)dev->api;
+	const struct display_driver_api *api = DEVICE_API_GET(display, dev);
 
 	if (api->blanking_on == NULL) {
 		return -ENOSYS;
@@ -664,8 +710,7 @@ static inline int display_blanking_on(const struct device *dev)
  */
 static inline int display_blanking_off(const struct device *dev)
 {
-	struct display_driver_api *api =
-		(struct display_driver_api *)dev->api;
+	const struct display_driver_api *api = DEVICE_API_GET(display, dev);
 
 	if (api->blanking_off == NULL) {
 		return -ENOSYS;
@@ -689,8 +734,7 @@ static inline int display_blanking_off(const struct device *dev)
 static inline int display_set_brightness(const struct device *dev,
 					 uint8_t brightness)
 {
-	struct display_driver_api *api =
-		(struct display_driver_api *)dev->api;
+	const struct display_driver_api *api = DEVICE_API_GET(display, dev);
 
 	if (api->set_brightness == NULL) {
 		return -ENOSYS;
@@ -713,8 +757,7 @@ static inline int display_set_brightness(const struct device *dev,
  */
 static inline int display_set_contrast(const struct device *dev, uint8_t contrast)
 {
-	struct display_driver_api *api =
-		(struct display_driver_api *)dev->api;
+	const struct display_driver_api *api = DEVICE_API_GET(display, dev);
 
 	if (api->set_contrast == NULL) {
 		return -ENOSYS;
@@ -733,10 +776,9 @@ static inline void display_get_capabilities(const struct device *dev,
 					    struct display_capabilities *
 					    capabilities)
 {
-	struct display_driver_api *api =
-		(struct display_driver_api *)dev->api;
-
-	api->get_capabilities(dev, capabilities);
+	__ASSERT(capabilities != NULL, "display_capabilities struct is NULL");
+	memset(capabilities, 0, sizeof(struct display_capabilities));
+	DEVICE_API_GET(display, dev)->get_capabilities(dev, capabilities);
 }
 
 /**
@@ -752,8 +794,7 @@ static inline int
 display_set_pixel_format(const struct device *dev,
 			 const enum display_pixel_format pixel_format)
 {
-	struct display_driver_api *api =
-		(struct display_driver_api *)dev->api;
+	const struct display_driver_api *api = DEVICE_API_GET(display, dev);
 
 	if (api->set_pixel_format == NULL) {
 		return -ENOSYS;
@@ -775,8 +816,7 @@ static inline int display_set_orientation(const struct device *dev,
 					  const enum display_orientation
 					  orientation)
 {
-	struct display_driver_api *api =
-		(struct display_driver_api *)dev->api;
+	const struct display_driver_api *api = DEVICE_API_GET(display, dev);
 
 	if (api->set_orientation == NULL) {
 		return -ENOSYS;
@@ -805,8 +845,7 @@ static inline int display_set_orientation(const struct device *dev,
  *
  * @return 0 and a non-zero out_reg_handle value on success, otherwise a negative errno code.
  * @retval -EBUSY A callback is already registered.
- * @retval -ENOTSUP One of the events is not supported,
- * or the requested invocation context is not supported.
+ * @retval -ENOTSUP The requested callback invocation context is not supported.
  * @retval -ENOSYS Not implemented.
  * @retval -EINVAL Invalid argument.
  */
@@ -815,10 +854,21 @@ static inline int display_register_event_cb(const struct device *dev,
 					    uint32_t event_mask, bool in_isr,
 					    uint32_t *out_reg_handle)
 {
-	struct display_driver_api *api = (struct display_driver_api *)dev->api;
+	__ASSERT(cb != NULL, "Registration failed: callback function pointer is NULL");
+
+	const struct display_driver_api *api = DEVICE_API_GET(display, dev);
+	struct display_capabilities caps;
 
 	if (api->register_event_cb == NULL) {
 		return -ENOSYS;
+	}
+
+	api->get_capabilities(dev, &caps);
+	if (!caps.supported_events) {
+		return -ENOSYS;
+	}
+	if (event_mask == 0 || (~caps.supported_events & event_mask)) {
+		return -EINVAL;
 	}
 
 	return api->register_event_cb(dev, cb, user_data, event_mask, in_isr, out_reg_handle);
@@ -837,7 +887,7 @@ static inline int display_register_event_cb(const struct device *dev,
  */
 static inline int display_unregister_event_cb(const struct device *dev, uint32_t reg_handle)
 {
-	struct display_driver_api *api = (struct display_driver_api *)dev->api;
+	const struct display_driver_api *api = DEVICE_API_GET(display, dev);
 
 	if (api->unregister_event_cb == NULL || api->register_event_cb == NULL) {
 		return -ENOSYS;
