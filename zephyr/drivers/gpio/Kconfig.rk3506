@@ -8,9 +8,13 @@ config GPIO_RK3506
 	default y
 	depends on DT_HAS_ROCKCHIP_RK3506_GPIO_ENABLED
 	depends on SOC_RK3506
-	select CLOCK_CONTROL
+	depends on CLOCK_CONTROL
 	help
 	  Enable GPIO driver for Rockchip RK3506.
+
+	  Depends on (rather than selects) CLOCK_CONTROL: selecting it here
+	  creates a dependency loop with upstream symbols that both depend on
+	  CLOCK_CONTROL and select GPIO (e.g. I2S_SILABS_SIWX91X).
 
 config GPIO_RK3506_INIT_PRIORITY
 	int "RK3506 GPIO driver init priority"

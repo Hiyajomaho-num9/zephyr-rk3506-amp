@@ -20,6 +20,16 @@ config SRAM_BASE_ADDRESS
 config SRAM_SIZE
 	default 1024
 
+# CRU is baseline SoC infrastructure (clock gating for UART/CAN/GPIO/...).
+# Enable CLOCK_CONTROL by default rather than having each driver select it:
+# a driver select creates a Kconfig dependency loop with upstream symbols
+# that depend on CLOCK_CONTROL and select GPIO (e.g. I2S_SILABS_SIWX91X).
+config CLOCK_CONTROL
+	default y
+
+config CLOCK_CONTROL_RK3506_CRU
+	default y
+
 if SERIAL
 
 config UART_NS16550

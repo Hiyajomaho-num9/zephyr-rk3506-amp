@@ -1,0 +1,25 @@
+/*
+ * Copyright (c) 2026
+ * SPDX-License-Identifier: Apache-2.0
+ */
+
+#include <zephyr/dt-bindings/gpio/gpio.h>
+
+/*
+ * gpio_basic_api loopback for ok3506b_s12_amp_uart1:
+ * short gpio2 pin4 (GPIO2_D0... see board doc) to pin5 on the header.
+ * TRM Part 1 §17: per-bank 32 pins, numbered 0..31 in device tree.
+ */
+
+/ {
+	resources {
+		compatible = "test-gpio-basic-api";
+		status = "okay";
+		out-gpios = <&gpio2 4 GPIO_ACTIVE_HIGH>;
+		in-gpios = <&gpio2 5 GPIO_ACTIVE_HIGH>;
+	};
+};
+
+&gpio2 {
+	status = "okay";
+};
