@@ -13,6 +13,15 @@ list(APPEND SOC_ROOT "${RK3506_ZEPHYR_ROOT}")
 list(APPEND DTS_ROOT "${RK3506_ZEPHYR_ROOT}")
 list(APPEND EXTRA_ZEPHYR_MODULES "${RK3506_ZEPHYR_ROOT}")
 
+# Optional debug overlay injection (set before cmake configure):
+#   RK3506_DEBUG_DTS_OVERLAY=<path>  -> appended to DTC_OVERLAY_FILE
+#   e.g. RK3506_DEBUG_DTS_OVERLAY=$PWD/boards/debug/enable_gpio2.overlay
+# Must run before find_package(Zephyr).
+if(DEFINED ENV{RK3506_DEBUG_DTS_OVERLAY})
+  set(DTC_OVERLAY_FILE "$ENV{RK3506_DEBUG_DTS_OVERLAY}")
+  message(STATUS "rk3506_pingpong: debug overlay: ${DTC_OVERLAY_FILE}")
+endif()
+
 find_package(Zephyr REQUIRED HINTS $ENV{ZEPHYR_BASE})
 project(rk3506_rpmsg_pingpong)
 

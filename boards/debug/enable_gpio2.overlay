@@ -1,0 +1,10 @@
+/*
+ * Debug overlay: enable gpio2 for interactive shell triage.
+ * Pairs with boards/debug/gpio-shell.conf.
+ * Pin4/pin5 match the planned loopback pair (ZCODE-SYNC.md §6).
+ */
+#include <zephyr/dt-bindings/gpio/gpio.h>
+
+&gpio2 {
+	status = "okay";
+};
