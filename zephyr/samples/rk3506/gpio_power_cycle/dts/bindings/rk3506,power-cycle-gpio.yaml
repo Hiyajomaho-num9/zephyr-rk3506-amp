@@ -1,0 +1,15 @@
+# Copyright (c) 2026
+# SPDX-License-Identifier: Apache-2.0
+
+description: |
+    Single GPIO output used as an external power-controller signal for
+    cold power-cycle stress testing.
+
+compatible: "rk3506,power-cycle-gpio"
+
+properties:
+  power-gpios:
+    type: phandle-array
+    required: true
+    description: |
+      The GPIO that signals the external power controller.

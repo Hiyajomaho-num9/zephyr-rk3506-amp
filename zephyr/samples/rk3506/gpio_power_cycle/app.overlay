@@ -1,0 +1,22 @@
+/*
+ * Copyright (c) 2026
+ * SPDX-License-Identifier: Apache-2.0
+ *
+ * GPIO0_A2 = gpio0 pin 2 (bank0 group A pin 2).  Reset IOMUX default is
+ * GPIO function (GPIO0_IOC_GPIO0A_IOMUX_SEL_L[11:8] = 4'h0), Linux side
+ * does not claim it.  The pad drives an external power controller for
+ * cold power-cycle stress testing.
+ */
+
+#include <zephyr/dt-bindings/gpio/gpio.h>
+
+/ {
+	power_cycle_gpio: power-cycle-gpio {
+		compatible = "rk3506,power-cycle-gpio";
+		power-gpios = <&gpio0 2 GPIO_ACTIVE_HIGH>;
+	};
+};
+
+&gpio0 {
+	status = "okay";
+};

@@ -1,0 +1,13 @@
+sample:
+  name: RK3506 GPIO0_A2 power-cycle stress signal
+  description: >
+    Drives GPIO0_A2 for an external power controller:
+    boot HIGH -> 50 s -> LOW 2 s -> HIGH 15 s -> LOW 2 s -> HIGH forever.
+    Used for cold power-cycle stress testing of the OK3506B-S12 AMP setup.
+tests:
+  sample.rk3506.gpio_power_cycle:
+    build_only: true
+    platform_allow:
+      - ok3506b_s12_amp_uart1
+    integration_platforms:
+      - ok3506b_s12_amp_uart1
