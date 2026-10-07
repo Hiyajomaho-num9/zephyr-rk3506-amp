@@ -149,6 +149,7 @@ static void rk3506_uart1_init_early(void)
 static void rk3506_apply_cache_policy(void)
 {
 	uint32_t sctlr = __get_SCTLR();
+	const uint32_t old_sctlr = sctlr;
 
 #if defined(CONFIG_SOC_RK3506_PRIVATE_ICACHE)
 	if ((sctlr & SCTLR_C_Msk) != 0U) {
@@ -172,6 +173,17 @@ static void rk3506_apply_cache_policy(void)
 	sctlr &= ~SCTLR_C_Msk;
 #endif
 	sctlr &= ~SCTLR_A_Msk;
+
+	/*
+	 * Turning a live D-cache off must write its dirty lines back first,
+	 * otherwise every store made while it was on is silently lost. The
+	 * generic ARMv7 MMU init no longer enables the D-cache on RK3506
+	 * (arch/arm/core/mmu/arm_mmu.c), so this only fires if some earlier
+	 * stage left the cache on; keep it as a safety net.
+	 */
+	if (((old_sctlr & SCTLR_C_Msk) != 0U) && ((sctlr & SCTLR_C_Msk) == 0U)) {
+		L1C_CleanInvalidateDCacheAll();
+	}
 	__DSB();
 	__set_SCTLR(sctlr);
 	__ISB();
@@ -314,6 +326,14 @@ static const struct arm_mmu_region mmu_regions[] = {
 	MMU_REGION_FLAT_ENTRY("can1",
 			      RK3506_CAN1_BASE,
 			      0x1000,
+			      MT_DEVICE | MPERM_R | MPERM_W),
+#endif
+#if DT_NODE_HAS_STATUS(DT_NODELABEL(spi0), okay)
+	MMU_REGION_FLAT_ENTRY("spi0", 0xff120000, 0x1000,
+			      MT_DEVICE | MPERM_R | MPERM_W),
+#endif
+#if DT_NODE_HAS_STATUS(DT_NODELABEL(spi1), okay)
+	MMU_REGION_FLAT_ENTRY("spi1", 0xff130000, 0x1000,
 			      MT_DEVICE | MPERM_R | MPERM_W),
 #endif
 	MMU_REGION_FLAT_ENTRY("amp-shmem",

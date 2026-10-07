@@ -882,8 +882,16 @@ int z_arm_mmu_init(void)
 	reg_val  = __get_SCTLR();
 	reg_val |= ARM_MMU_SCTLR_AFE_BIT;
 	reg_val |= ARM_MMU_SCTLR_ICACHE_ENABLE_BIT;
-#if !defined(CONFIG_RK3506_PRIVATE_ICACHE)
+#if !defined(CONFIG_SOC_RK3506)
 	reg_val |= ARM_MMU_SCTLR_DCACHE_ENABLE_BIT;
+#else
+	/*
+	 * RK3506 AMP (CPU2 running next to Linux): the SoC layer owns the
+	 * D-cache decision. rk3506_apply_cache_policy() in soc.c enables the
+	 * D-cache only when CONFIG_SOC_RK3506_PRIVATE_DCACHE is set, after
+	 * invalidating it. Enabling it here and letting the SoC hook turn it
+	 * off again would drop every dirty line written in between.
+	 */
 #endif
 	reg_val |= ARM_MMU_SCTLR_MMU_ENABLE_BIT;
 	__set_SCTLR(reg_val);

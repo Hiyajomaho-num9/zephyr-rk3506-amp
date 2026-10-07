@@ -1,0 +1,22 @@
+# SPDX-License-Identifier: Apache-2.0
+
+description: Rockchip RK3506 SPI controller
+
+compatible: "rockchip,rk3506-spi"
+
+include: [spi-controller.yaml, pinctrl-device.yaml]
+
+properties:
+  reg:
+    required: true
+
+  clocks:
+    required: true
+
+  clock-names:
+    required: true
+
+  pinctrl-0:
+    description: |
+      SPI pad mux, configured only after Linux has released these pins.
+      Omit for internal controller loopback without external pins.

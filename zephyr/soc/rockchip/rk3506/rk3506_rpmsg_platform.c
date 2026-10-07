@@ -233,10 +233,18 @@ static uint32_t gic_irq_icfgr_word_addr(uint32_t irq)
 
 static void rk3506_rpmsg_platform_route_irq(uint32_t irq)
 {
-#if defined(CONFIG_SOC_RK3506_RPMSG_MBOX_GIC_ROUTE)
+#ifdef CONFIG_GIC_V2
 	mailbox_gic_target_before = sys_read8(GICD_ITARGETSRn + irq);
+#if defined(CONFIG_SOC_RK3506_RPMSG_MBOX_GIC_ROUTE)
+	/*
+	 * Legacy path (GIC_SAFE_CONFIG disabled): force the target byte.
+	 * With GIC_SAFE_CONFIG, arm_gic_irq_enable() ORs this core's mask
+	 * into GICD_ITARGETSR when the IRQ is enabled below and never clears
+	 * bits that belong to Linux, so nothing has to be written here.
+	 */
 	sys_write8((uint8_t)CONFIG_SOC_RK3506_RPMSG_MBOX_GIC_TARGET_MASK,
 		   GICD_ITARGETSRn + irq);
+#endif
 	mailbox_gic_target_after = sys_read8(GICD_ITARGETSRn + irq);
 #else
 	ARG_UNUSED(irq);
@@ -367,6 +375,9 @@ uint32_t rk3506_rpmsg_platform_compiled_flags(void)
 #endif
 #ifdef CONFIG_SOC_RK3506_RPMSG_KEEP_IRQ_ENABLE
 	flags |= BIT(5);
+#endif
+#ifdef CONFIG_GIC_SAFE_CONFIG
+	flags |= BIT(6);
 #endif
 
 	return flags;

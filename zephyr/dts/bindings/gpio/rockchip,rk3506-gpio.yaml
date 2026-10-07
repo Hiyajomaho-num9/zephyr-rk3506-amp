@@ -4,26 +4,54 @@
 description: |
   Rockchip RK3506 GPIO bank.
 
-  Each bank exposes 32 pins. The SoC has five banks:
-    gpio0 @ 0xff940000 (PMU domain)
-    gpio1 @ 0xff870000
-    gpio2 @ 0xff1c0000
-    gpio3 @ 0xff1d0000
-    gpio4 @ 0xff1e0000
+  Pins use bank-local pad numbering, A0=0, B0=8, C0=16, D0=24.
+  GPIO0 has A0..C7 and D0; GPIO1 has A0..C7 and D0..D3;
+  GPIO2 has A0..A5, B0..B7 and C0; GPIO3 has A0..A7 and B0..B6.
+  GPIO4_B0..B3 are 1.8 V SARADC pads. GPIO4_A0..A5 are output-only
+  MIPI D-PHY pads and remain reserved until the PHY GPIO mode is supported.
+
+  gpio-reserved-ranges must exclude pads owned by other processors/peripherals.
+  All four IRQs belong to GPIO OS groups, not pad groups A/B/C/D. In virtual
+  mode the firmware must assign every exposed GPIO to rockchip,irq-group
+  before starting Zephyr. The driver does not change virtual ownership.
+
+  GPIO0_D0 and GPIO4 do not support hardware open drain. GPIO4_B0..B3
+  share pull, drive and Schmitt settings; set these in a pinctrl state
+  containing all four pads. Per-pin GPIO pull requests return ENOTSUP there.
+  With no GPIO pull flag, GPIO4 preserves the pinctrl group's bias.
 
 compatible: "rockchip,rk3506-gpio"
 
-include: [gpio-controller.yaml, base.yaml]
+include: [gpio-controller.yaml, base.yaml, pinctrl-device.yaml]
 
 properties:
   reg:
     required: true
+    description: The complete 16 KiB GPIO block, including all four OS windows.
 
   interrupts:
     required: true
+    description: GPIO group 0, 1, 2 and 3 interrupts, in that order.
 
   clocks:
     required: true
+    description: GPIO APB clock.
+
+  rockchip,bank-id:
+    type: int
+    required: true
+    enum: [0, 1, 2, 3, 4]
+
+  rockchip,irq-group:
+    type: int
+    default: 0
+    enum: [0, 1, 2, 3]
+    description: |
+      OS group interrupt assigned exclusively to this driver. Group 0 is the
+      normal single-OS default. AMP board configurations must choose a group
+      not serviced by Linux. With virtual mode disabled, only pins requested
+      for interrupts are routed into this group. Output-only use does not
+      enable a GIC interrupt or alter group routing.
 
   "#gpio-cells":
     const: 2
@@ -31,7 +59,7 @@ properties:
   ngpios:
     type: int
     required: true
-    description: Number of GPIOs available in this bank (32).
+    description: Pin number span, including holes excluded by gpio-reserved-ranges.
 
 gpio-cells:
   - pin

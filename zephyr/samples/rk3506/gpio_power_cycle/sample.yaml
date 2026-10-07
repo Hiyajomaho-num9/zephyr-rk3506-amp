@@ -1,9 +1,9 @@
 sample:
-  name: RK3506 GPIO0_A2 power-cycle stress signal
+  name: RK3506 GPIO0_A2 one-shot key signal
   description: >
-    Drives GPIO0_A2 for an external power controller:
-    boot HIGH -> 50 s -> LOW 2 s -> HIGH 15 s -> LOW 2 s -> HIGH forever.
-    Used for cold power-cycle stress testing of the OK3506B-S12 AMP setup.
+    Uses the Zephyr GPIO driver to drive GPIO0_A2:
+    HIGH for 50 s -> LOW for 250 ms -> HIGH for 20 s -> LOW for 250 ms -> HIGH indefinitely,
+    once per application boot.
 tests:
   sample.rk3506.gpio_power_cycle:
     build_only: true

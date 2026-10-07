@@ -39,14 +39,19 @@ config SOC_RK3506_RPMSG_MBOX_BB2_IRQ
 	  GIC_AMP_IRQ_CFG_ROUTE(176, ... CPU2).
 
 config SOC_RK3506_RPMSG_MBOX_GIC_ROUTE
-	bool "Route RK3506 mailbox2 BB IRQ to AMP CPU2 in GICv2"
-	depends on SOC_RK3506_RPMSG_MBOX_IRQ && GIC_V2
+	bool "Route RK3506 mailbox2 BB IRQ to AMP CPU2 in GICv2 (legacy)"
+	depends on SOC_RK3506_RPMSG_MBOX_IRQ && GIC_V2 && !GIC_SAFE_CONFIG
 	default y
 	help
-	  Zephyr's generic GICv2 distributor init does not understand the
-	  RK3506 AMP CPU affinity table used by Linux/RT-Thread. Re-apply the
-	  mailbox IRQ target byte after IRQ_CONNECT so Linux-to-CPU2 mailbox
-	  notifications can arrive as real IRQs instead of relying on polling.
+	  Legacy path for builds that turn GIC_SAFE_CONFIG off. Zephyr's plain
+	  GICv2 distributor init does not understand the RK3506 AMP CPU
+	  affinity table used by Linux/RT-Thread, so this re-writes the mailbox
+	  IRQ target byte after IRQ_CONNECT.
+
+	  With GIC_SAFE_CONFIG (the RK3506 default) arm_gic_irq_enable() ORs
+	  this core's GIC CPU mask into GICD_ITARGETSR for every SPI it
+	  enables, so no manual routing is needed and Linux-owned target bits
+	  are never overwritten.
 
 config SOC_RK3506_RPMSG_MBOX_GIC_TARGET_MASK
 	hex "RK3506 mailbox2 BB IRQ GICv2 target mask"

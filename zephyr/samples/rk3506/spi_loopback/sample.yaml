@@ -1,0 +1,38 @@
+sample:
+  name: RK3506 SPI0/SPI1 board test
+  description: >
+    Self-test of the RK3506 SPI driver on SPI0 and SPI1 at boot and again at
+    30 s, then a 1 s soak and a CRU clock-gate watch. Internal loopback by
+    default; external-spi1.overlay runs SPI1 over its pads with MOSI jumpered
+    to MISO.
+common:
+  platform_allow:
+    - ok3506b_s12_amp_uart1
+  integration_platforms:
+    - ok3506b_s12_amp_uart1
+  tags:
+    - spi
+    - rk3506
+tests:
+  sample.rk3506.spi_loopback:
+    harness: console
+    harness_config:
+      type: one_line
+      regex:
+        - "SELFTEST PASS boot"
+  # Needs the MOSI-MISO jumper on the board, so only built here.
+  sample.rk3506.spi_loopback.external_spi1:
+    build_only: true
+    extra_args:
+      - EXTRA_DTC_OVERLAY_FILE=external-spi1.overlay
+  # Build-time checks only, not for flashing: see README.md.
+  sample.rk3506.spi_loopback.gpio_cs:
+    build_only: true
+    extra_args:
+      - EXTRA_DTC_OVERLAY_FILE=gpio-cs-build.overlay
+    extra_configs:
+      - CONFIG_GPIO=y
+  sample.rk3506.spi_loopback.external_pins:
+    build_only: true
+    extra_args:
+      - EXTRA_DTC_OVERLAY_FILE=external-pins.overlay

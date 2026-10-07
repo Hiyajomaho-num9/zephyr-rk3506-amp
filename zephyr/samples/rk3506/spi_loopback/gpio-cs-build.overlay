@@ -1,0 +1,20 @@
+/*
+ * Build-time GPIO CS check only. GPIO0_B5 (SoM pin 66) is plain IO on the
+ * carrier and unused by Linux. Not GPIO0_A3: Linux drives it as PWM0_CH2
+ * (LCD backlight).
+ */
+#include <zephyr/dt-bindings/gpio/gpio.h>
+
+&gpio0 {
+	status = "okay";
+	gpio-reserved-ranges = <0 13>, <14 11>;
+};
+
+&spi0 {
+	status = "okay";
+	cs-gpios = <&gpio0 13 GPIO_ACTIVE_LOW>;
+};
+
+&spi1 {
+	status = "okay";
+};

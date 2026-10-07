@@ -1,13 +1,28 @@
 # SPDX-License-Identifier: Apache-2.0
 
 description: |
-  Rockchip RK3506 GPIO IOC/RMIO pin controller.
+  Rockchip RK3506 IOC/RMIO pin controller for GPIO0..GPIO4.
 
-  Each pinmux entry is encoded with RK3506_PINCTRL(bank, pin, mux, rmio_func):
-    - bank: GPIO0 bank token, RK3506_PINCTRL_BANK_A..D
-    - pin: pin number inside the bank, 0..7
-    - mux: GPIO IOC mux value
-    - rmio_func: RMIO function selector value
+  RK3506_PINMUX(bank, pin, mux, rmio_func) encodes one 32-bit cell:
+    - bank: GPIO bank 0..4
+    - pin: bank-local pad number, A0=0, B0=8, C0=16, D0=24
+    - mux: implemented IOC mux value, verified separately for each pad
+    - rmio_func: 0..0x62 for mux 7 on an RMIO-capable pad, otherwise 0
+
+  RK3506_PINCTRL(group, pin, mux, rmio_func) is retained for existing GPIO0
+  group-based definitions. Use the macros, not hand-encoded literal cells.
+  RMIO is available on GPIO0_A0..C7 and GPIO1_B1..B3, C2/C3, D1..D3.
+
+  A state can reference several configuration nodes. Each node may contain
+  multiple pinmux cells sharing the same electrical configuration. Properties
+  omitted from a node leave the corresponding electrical setting unchanged.
+  GPIO0_D0 has separate drive, pull and Schmitt fields and no open drain.
+  GPIO4_B0..B3 support mux 0 (GPIO/input buffer enabled) and mux 1 (analog/
+  input buffer disabled). They share bias, Schmitt, drive and slew fields;
+  any state changing these fields must include all four pads with identical
+  shared settings. Input enable remains per-pin. GPIO4 has no open drain.
+  GPIO4_A0..A5 require a separate MIPI D-PHY mode setup, not an IOC mux;
+  configuration of these output-only pads currently returns ENOTSUP.
 
 compatible: "rockchip,rk3506-pinctrl"
 
@@ -16,18 +31,53 @@ include: base.yaml
 properties:
   reg:
     required: true
-    description: Base address of GPIO0 IOC registers.
+    description: GPIO0 IOC, GPIO1 IOC, GPIO234 IOC and RMIO register ranges.
 
-  rmio-base:
-    type: int
+  reg-names:
     required: true
-    description: Base address of RMIO selector registers.
+    description: Must contain "ioc0", "ioc1", "ioc234" and "rmio".
+
+  clocks:
+    required: true
+    description: APB clocks for GPIO0 IOC, GPIO1 IOC and GPIO234 IOC.
+
+  clock-names:
+    required: true
+    description: Must contain "ioc0", "ioc1" and "ioc234".
 
 child-binding:
   description: RK3506 pin group.
+
+  include:
+    - name: pincfg-node.yaml
+      property-allowlist:
+        - bias-disable
+        - bias-pull-up
+        - bias-pull-down
+        - input-enable
+        - input-disable
+        - input-schmitt-enable
+        - input-schmitt-disable
+        - drive-push-pull
+        - drive-open-drain
+        - slew-rate
 
   properties:
     pinmux:
       required: true
       type: array
-      description: RK3506_PINCTRL(bank, pin, mux, rmio_func) entries.
+      description: One 32-bit RK3506_PINMUX(bank, pin, mux, rmio_func) cell per pin.
+
+    slew-rate:
+      enum: [0, 1, 2, 3]
+      description: |
+        IOC slew encoding. Regular pads accept 0..3 (slowest to fastest);
+        GPIO0_D0 and SARADC pads accept only 0 or 1 (disabled or enabled).
+
+    rockchip,drive-strength-level:
+      type: int
+      enum: [0, 1, 2, 3, 4, 5]
+      description: |
+        TRM drive-strength level, not current in mA. Regular pads accept
+        levels 0..5; GPIO0_D0 and SARADC pads accept only levels 0..3.
+        Omission preserves the existing setting.

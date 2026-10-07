@@ -67,7 +67,8 @@
 
 		cru_clock: clock-controller@ff9a0000 {
 			compatible = "rockchip,rk3506-cru-clock";
-			reg = <0xff9a0000 0x1000>;
+			reg = <0xff9a0000 0x1000>, <0xff9b0000 0x1000>;
+			reg-names = "cru", "pmu";
 			#clock-cells = <1>;
 
 			cru_reset: reset-controller {
@@ -79,8 +80,12 @@
 
 		pinctrl: pinctrl@ff950000 {
 			compatible = "rockchip,rk3506-pinctrl";
-			reg = <0xff950000 0x1000>;
-			rmio-base = <0xff910000>;
+			reg = <0xff950000 0x1000>, <0xff660000 0x1000>,
+			      <0xff4d8000 0x1000>, <0xff910000 0x1000>;
+			reg-names = "ioc0", "ioc1", "ioc234", "rmio";
+			clocks = <&cru_clock PCLK_GPIO0_IOC>, <&cru_clock PCLK_GPIO1_IOC>,
+				 <&cru_clock PCLK_GPIO234_IOC>;
+			clock-names = "ioc0", "ioc1", "ioc234";
 
 			can0m0_tx_pb6: can0m0-tx-pb6 {
 				pinmux = <RK3506_PINCTRL(RK3506_PINCTRL_BANK_B, 6, 7, 0x1c)>;
@@ -88,6 +93,34 @@
 
 			can0m0_rx_pc0: can0m0-rx-pc0 {
 				pinmux = <RK3506_PINCTRL(RK3506_PINCTRL_BANK_C, 0, 7, 0x1d)>;
+			};
+
+			spi0m0_pins: spi0m0-pins {
+				pinmux = <RK3506_PINMUX(0, 16, 2, 0)>,
+					 <RK3506_PINMUX(0, 17, 2, 0)>,
+					 <RK3506_PINMUX(0, 18, 2, 0)>;
+			};
+
+			spi0m0_csn0: spi0m0-csn0 {
+				pinmux = <RK3506_PINMUX(0, 19, 2, 0)>;
+			};
+
+			spi0m0_csn1: spi0m0-csn1 {
+				pinmux = <RK3506_PINMUX(0, 15, 2, 0)>;
+			};
+
+			spi1m0_pins: spi1m0-pins {
+				pinmux = <RK3506_PINMUX(0, 8, 2, 0)>,
+					 <RK3506_PINMUX(0, 9, 2, 0)>,
+					 <RK3506_PINMUX(0, 10, 2, 0)>;
+			};
+
+			spi1m0_csn0: spi1m0-csn0 {
+				pinmux = <RK3506_PINMUX(0, 14, 2, 0)>;
+			};
+
+			spi1m0_csn1: spi1m0-csn1 {
+				pinmux = <RK3506_PINMUX(0, 7, 2, 0)>;
 			};
 		};
 
@@ -128,9 +161,30 @@
 			reset-names = "can", "can-apb";
 			status = "disabled";
 		};
+
+		spi0: spi@ff120000 {
+			compatible = "rockchip,rk3506-spi";
+			reg = <0xff120000 0x1000>;
+			clocks = <&cru_clock CLK_SPI0>, <&cru_clock PCLK_SPI0>;
+			clock-names = "spiclk", "apb_pclk";
+			#address-cells = <1>;
+			#size-cells = <0>;
+			status = "disabled";
+		};
+
+		spi1: spi@ff130000 {
+			compatible = "rockchip,rk3506-spi";
+			reg = <0xff130000 0x1000>;
+			clocks = <&cru_clock CLK_SPI1>, <&cru_clock PCLK_SPI1>;
+			clock-names = "spiclk", "apb_pclk";
+			#address-cells = <1>;
+			#size-cells = <0>;
+			status = "disabled";
+		};
 		gpio0: gpio@ff940000 {
 			compatible = "rockchip,rk3506-gpio";
-			reg = <0xff940000 0x100>;
+			reg = <0xff940000 0x4000>;
+			rockchip,bank-id = <0>;
 			interrupts = <GIC_SPI 0 IRQ_TYPE_LEVEL IRQ_DEFAULT_PRIORITY>,
 				     <GIC_SPI 1 IRQ_TYPE_LEVEL IRQ_DEFAULT_PRIORITY>,
 				     <GIC_SPI 2 IRQ_TYPE_LEVEL IRQ_DEFAULT_PRIORITY>,
@@ -138,13 +192,14 @@
 			clocks = <&cru_clock HCLK_GPIO0>;
 			gpio-controller;
 			#gpio-cells = <2>;
-			ngpios = <32>;
+			ngpios = <25>;
 			status = "disabled";
 		};
 
 		gpio1: gpio@ff870000 {
 			compatible = "rockchip,rk3506-gpio";
-			reg = <0xff870000 0x100>;
+			reg = <0xff870000 0x4000>;
+			rockchip,bank-id = <1>;
 			interrupts = <GIC_SPI 4 IRQ_TYPE_LEVEL IRQ_DEFAULT_PRIORITY>,
 				     <GIC_SPI 5 IRQ_TYPE_LEVEL IRQ_DEFAULT_PRIORITY>,
 				     <GIC_SPI 6 IRQ_TYPE_LEVEL IRQ_DEFAULT_PRIORITY>,
@@ -152,13 +207,14 @@
 			clocks = <&cru_clock HCLK_GPIO1>;
 			gpio-controller;
 			#gpio-cells = <2>;
-			ngpios = <32>;
+			ngpios = <28>;
 			status = "disabled";
 		};
 
 		gpio2: gpio@ff1c0000 {
 			compatible = "rockchip,rk3506-gpio";
-			reg = <0xff1c0000 0x100>;
+			reg = <0xff1c0000 0x4000>;
+			rockchip,bank-id = <2>;
 			interrupts = <GIC_SPI 8 IRQ_TYPE_LEVEL IRQ_DEFAULT_PRIORITY>,
 				     <GIC_SPI 9 IRQ_TYPE_LEVEL IRQ_DEFAULT_PRIORITY>,
 				     <GIC_SPI 10 IRQ_TYPE_LEVEL IRQ_DEFAULT_PRIORITY>,
@@ -166,13 +222,15 @@
 			clocks = <&cru_clock HCLK_GPIO2>;
 			gpio-controller;
 			#gpio-cells = <2>;
-			ngpios = <32>;
+			ngpios = <17>;
+			gpio-reserved-ranges = <6 2>;
 			status = "disabled";
 		};
 
 		gpio3: gpio@ff1d0000 {
 			compatible = "rockchip,rk3506-gpio";
-			reg = <0xff1d0000 0x100>;
+			reg = <0xff1d0000 0x4000>;
+			rockchip,bank-id = <3>;
 			interrupts = <GIC_SPI 12 IRQ_TYPE_LEVEL IRQ_DEFAULT_PRIORITY>,
 				     <GIC_SPI 13 IRQ_TYPE_LEVEL IRQ_DEFAULT_PRIORITY>,
 				     <GIC_SPI 14 IRQ_TYPE_LEVEL IRQ_DEFAULT_PRIORITY>,
@@ -180,13 +238,14 @@
 			clocks = <&cru_clock HCLK_GPIO3>;
 			gpio-controller;
 			#gpio-cells = <2>;
-			ngpios = <32>;
+			ngpios = <15>;
 			status = "disabled";
 		};
 
 		gpio4: gpio@ff1e0000 {
 			compatible = "rockchip,rk3506-gpio";
-			reg = <0xff1e0000 0x100>;
+			reg = <0xff1e0000 0x4000>;
+			rockchip,bank-id = <4>;
 			interrupts = <GIC_SPI 16 IRQ_TYPE_LEVEL IRQ_DEFAULT_PRIORITY>,
 				     <GIC_SPI 17 IRQ_TYPE_LEVEL IRQ_DEFAULT_PRIORITY>,
 				     <GIC_SPI 18 IRQ_TYPE_LEVEL IRQ_DEFAULT_PRIORITY>,
@@ -194,7 +253,9 @@
 			clocks = <&cru_clock HCLK_GPIO4>;
 			gpio-controller;
 			#gpio-cells = <2>;
-			ngpios = <32>;
+			ngpios = <12>;
+			/* A0..A5 require D-PHY GPIO mode; A6/A7 are not bonded pads. */
+			gpio-reserved-ranges = <0 8>;
 			status = "disabled";
 		};
 	};

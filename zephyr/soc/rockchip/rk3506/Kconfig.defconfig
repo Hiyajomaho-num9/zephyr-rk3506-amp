@@ -30,6 +30,13 @@ config CLOCK_CONTROL
 config CLOCK_CONTROL_RK3506_CRU
 	default y
 
+# CPU2 shares the GIC-400 distributor with Linux on CPU0/1. Never re-run the
+# full distributor init on top of a live distributor (it clears GICD_CTLR and
+# every SPI target/priority/enable Linux owns), and route only the SPIs this
+# core enables to itself by OR-ing in the local CPU mask.
+config GIC_SAFE_CONFIG
+	default y
+
 if SERIAL
 
 config UART_NS16550

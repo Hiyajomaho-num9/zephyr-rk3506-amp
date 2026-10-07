@@ -6,5 +6,15 @@ config PINCTRL_RK3506
 	depends on PINCTRL
 	depends on SOC_RK3506
 	depends on DT_HAS_ROCKCHIP_RK3506_PINCTRL_ENABLED
+	depends on CLOCK_CONTROL
 	help
-	  Enable GPIO IOC and RMIO routing for RK3506 peripheral pins.
+	  Enable IOC/RMIO routing and pad configuration for RK3506 GPIO0..4.
+	  MIPI D-PHY output pads require a separate PHY setup and are not enabled
+	  by this driver.
+
+config PINCTRL_RK3506_INIT_PRIORITY
+	int "RK3506 pin controller init priority"
+	default 35
+	depends on PINCTRL_RK3506
+	help
+	  Must follow CLOCK_CONTROL_INIT_PRIORITY and precede peripheral users.

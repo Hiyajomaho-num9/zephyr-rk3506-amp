@@ -6,20 +6,28 @@
 #include <zephyr/dt-bindings/gpio/gpio.h>
 
 /*
- * gpio_basic_api loopback for ok3506b_s12_amp_uart1:
- * short gpio2 pin4 (GPIO2_D0... see board doc) to pin5 on the header.
- * TRM Part 1 §17: per-bank 32 pins, numbered 0..31 in device tree.
+ * gpio_basic_api loopback for ok3506b_s12_amp_uart1: jumper GPIO3_A6
+ * (SoM connector pin 129) to GPIO3_A7 (pin 128). The carrier routes both
+ * to plain IO and the Linux AMP DTB has no enabled user of either.
+ *
+ * Not gpio2: on this SPI NAND SoM GPIO2_A0..A5 are the FSPI pins and
+ * GPIO2_B0..C0 are Linux RMII0. Configuring a GPIO sets its IOMUX to GPIO,
+ * so the test alone, with no jumper, would cut those pads off the NAND.
  */
 
 / {
 	resources {
 		compatible = "test-gpio-basic-api";
 		status = "okay";
-		out-gpios = <&gpio2 4 GPIO_ACTIVE_HIGH>;
-		in-gpios = <&gpio2 5 GPIO_ACTIVE_HIGH>;
+		out-gpios = <&gpio3 6 GPIO_ACTIVE_HIGH>;
+		in-gpios = <&gpio3 7 GPIO_ACTIVE_HIGH>;
 	};
 };
 
-&gpio2 {
+&gpio3 {
 	status = "okay";
+	/* Expose A6/A7 only; GPIO3_A0..A5 are the Linux TF card. */
+	gpio-reserved-ranges = <0 6>, <8 7>;
+	/* Linux services group 0; rockchip,amp-irqs routes group 3 to CPU2. */
+	rockchip,irq-group = <3>;
 };

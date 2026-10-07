@@ -9,6 +9,7 @@ config GPIO_RK3506
 	depends on DT_HAS_ROCKCHIP_RK3506_GPIO_ENABLED
 	depends on SOC_RK3506
 	depends on CLOCK_CONTROL
+	select PINCTRL
 	help
 	  Enable GPIO driver for Rockchip RK3506.
 
@@ -21,6 +22,6 @@ config GPIO_RK3506_INIT_PRIORITY
 	default 45
 	depends on GPIO_RK3506
 	help
-	  RK3506 GPIO device initialization priority. Must be higher than
-	  the clock control driver init priority so that the GPIO banks can
-	  request their pclk gate release during init.
+	  RK3506 GPIO device initialization priority. Must be numerically
+	  greater than the clock control and RK3506 pinctrl init priorities
+	  so that clock gates and pad configuration are available during init.

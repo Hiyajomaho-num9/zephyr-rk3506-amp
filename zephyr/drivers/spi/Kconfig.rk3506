@@ -1,0 +1,11 @@
+# SPDX-License-Identifier: Apache-2.0
+
+config SPI_RK3506
+	bool "Rockchip RK3506 SPI controller"
+	default y
+	depends on DT_HAS_ROCKCHIP_RK3506_SPI_ENABLED
+	depends on CLOCK_CONTROL && CLOCK_CONTROL_RK3506_CRU
+	select PINCTRL
+	help
+	  Enable synchronous, controller-mode SPI0/SPI1 transfers on RK3506.
+	  The controller uses polled transfers; DMA and peripheral mode are not supported.

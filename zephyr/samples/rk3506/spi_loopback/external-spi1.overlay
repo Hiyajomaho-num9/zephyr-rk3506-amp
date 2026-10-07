@@ -1,0 +1,22 @@
+/*
+ * Copyright (c) 2026
+ * SPDX-License-Identifier: Apache-2.0
+ *
+ * SPI1 over its M0 pads instead of the internal loopback. Jumper MOSI to
+ * MISO: GPIO0_B1 (SPI1_MOSI, SoM pin 78) to GPIO0_B2 (SPI1_MISO, SoM pin 76).
+ * SCLK is GPIO0_B0 (pin 80), CS is CSN1 on GPIO0_A7 (pin 95); CSN0 would be
+ * GPIO0_B6, which is CAN0_TX on this board. The Linux AMP DTB has no enabled
+ * user of B0/B1/B2/A7. SPI0 keeps the internal loopback.
+ */
+
+/ {
+	zephyr,user {
+		spi1-cs = <1>;
+	};
+};
+
+&spi1 {
+	status = "okay";
+	pinctrl-0 = <&spi1m0_pins &spi1m0_csn1>;
+	pinctrl-names = "default";
+};

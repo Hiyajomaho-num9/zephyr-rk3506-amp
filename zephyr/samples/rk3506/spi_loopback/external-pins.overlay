@@ -1,0 +1,16 @@
+/* Build-time pinctrl check only: requires Linux to release both SPI blocks and these pads. */
+&can0 {
+	status = "disabled";
+};
+
+&spi0 {
+	status = "okay";
+	pinctrl-0 = <&spi0m0_pins &spi0m0_csn0>;
+	pinctrl-names = "default";
+};
+
+&spi1 {
+	status = "okay";
+	pinctrl-0 = <&spi1m0_pins &spi1m0_csn0>;
+	pinctrl-names = "default";
+};

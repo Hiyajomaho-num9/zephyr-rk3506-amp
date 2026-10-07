@@ -9,6 +9,11 @@ include: [base.yaml, clock-controller.yaml]
 properties:
   reg:
     required: true
+    description: Main CRU and PMU CRU register ranges, in that order.
+
+  reg-names:
+    required: true
+    description: Must contain "cru" and "pmu".
 
   "#clock-cells":
     const: 1
