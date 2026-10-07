@@ -1,5 +1,9 @@
 # Zephyr Official Doc Audit Summary
 
+> Historical documentation inventory. Paths, counts, and TSV hashes describe
+> that snapshot; the live documentation is now the SDK-local `zephyr/doc/`.
+> See [BSP-CHECKLIST.md](../../../../docs/rk3506/BSP-CHECKLIST.md) for current validation.
+
 ## Scope
 
 Source tree:

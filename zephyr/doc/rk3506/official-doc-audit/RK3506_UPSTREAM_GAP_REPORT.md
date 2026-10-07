@@ -1,5 +1,9 @@
 # RK3506 Zephyr BSP 上游化差距报告
 
+> 2026-05 的历史评估，以下目录和验证结果对应当时的工程。
+> 当前结构和待办见 [STATUS.md](../../../../docs/rk3506/STATUS.md) 与
+> [BSP-CHECKLIST.md](../../../../docs/rk3506/BSP-CHECKLIST.md)。
+
 日期：2026-05-16
 
 ## 1. 范围

@@ -7,20 +7,14 @@ get_filename_component(RK3506_ZEPHYR_ROOT
   ABSOLUTE
 )
 # SDK direct builds invoke this as a freestanding app. Keep these roots as
-# compatibility glue; zephyr/module.yml is the official module entry point.
+# compatibility glue. This is a complete Zephyr source tree, not an external
+# module; registering it as one breaks when the SDK uses a symlinked base.
 list(APPEND BOARD_ROOT "${RK3506_ZEPHYR_ROOT}")
 list(APPEND SOC_ROOT "${RK3506_ZEPHYR_ROOT}")
 list(APPEND DTS_ROOT "${RK3506_ZEPHYR_ROOT}")
-list(APPEND EXTRA_ZEPHYR_MODULES "${RK3506_ZEPHYR_ROOT}")
 
-# Optional debug overlay injection (set before cmake configure):
-#   RK3506_DEBUG_DTS_OVERLAY=<path>  -> appended to DTC_OVERLAY_FILE
-#   e.g. RK3506_DEBUG_DTS_OVERLAY=$PWD/boards/debug/enable_gpio2.overlay
-# Must run before find_package(Zephyr).
-if(DEFINED ENV{RK3506_DEBUG_DTS_OVERLAY})
-  set(DTC_OVERLAY_FILE "$ENV{RK3506_DEBUG_DTS_OVERLAY}")
-  message(STATUS "rk3506_pingpong: debug overlay: ${DTC_OVERLAY_FILE}")
-endif()
+# SDK builds pass optional overlays through EXTRA_DTC_OVERLAY_FILE. Direct
+# CMake builds use the same standard Zephyr option.
 
 find_package(Zephyr REQUIRED HINTS $ENV{ZEPHYR_BASE})
 project(rk3506_rpmsg_pingpong)

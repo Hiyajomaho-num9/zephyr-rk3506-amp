@@ -1,0 +1,14 @@
+/*
+ * Debug overlay: enable gpio3 for interactive shell triage.
+ * Pairs with boards/debug/gpio-shell.conf.
+ * Only A6/A7 (SoM pins 129/128) are exposed: the gpio_basic_api loopback
+ * pair, plain IO on the carrier and unused by Linux. GPIO3_A0..A5 are the
+ * Linux TF card. Linux services IRQ group 0; group 3 is routed to CPU2.
+ */
+#include <zephyr/dt-bindings/gpio/gpio.h>
+
+&gpio3 {
+	status = "okay";
+	gpio-reserved-ranges = <0 6>, <8 7>;
+	rockchip,irq-group = <3>;
+};

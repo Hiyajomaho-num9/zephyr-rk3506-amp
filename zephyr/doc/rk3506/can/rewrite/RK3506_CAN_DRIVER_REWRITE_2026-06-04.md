@@ -1,5 +1,8 @@
 # RK3506 CAN driver rewrite notes
 
+> Historical driver rewrite report. Its image hashes and commands describe
+> that baseline; current status is in [STATUS.md](../../../../../docs/rk3506/STATUS.md).
+
 日期：2026-06-04
 
 ## 目标

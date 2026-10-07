@@ -1,0 +1,134 @@
+// SPDX-License-Identifier: (GPL-2.0+ OR MIT)
+/*
+ * Copyright (c) 2024 Rockchip Electronics Co., Ltd.
+ */
+
+/dts-v1/;
+
+#include "OK3506-S-MINI_linux_nand.dts"
+
+/*
+ * 直接定义 reserved-memory 节点，确保 amp 相关内存区域被正确预留
+ * 注意：这会覆盖基础 DTS 中的 reserved-memory 定义
+ */
+/ {
+	reserved-memory {
+		#address-cells = <1>;
+		#size-cells = <1>;
+		ranges;
+
+		/* Trust OS 内存 */
+		trust@0 {
+			reg = <0x0 0x62000>;
+		};
+
+		/* CMA 内存 */
+		linux,cma {
+			compatible = "shared-dma-pool";
+			reusable;
+			size = <0x0>;
+			linux,cma-default;
+		};
+
+		/* DRM logo 内存 */
+		drm-logo@0 {
+			compatible = "rockchip,drm-logo";
+			reg = <0x0 0x0>;
+		};
+
+		/* ramoops 内存 */
+		ramoops@83000 {
+			compatible = "ramoops";
+			reg = <0x83000 0x2d000>;
+			boot-log-size = <0xd000>;
+			boot-log-count = <0x1>;
+			console-size = <0x20000>;
+			pmsg-size = <0x0>;
+			ftrace-size = <0x0>;
+			record-size = <0x0>;
+		};
+
+		/* AMP 共享内存 - 用于 Linux 和 RTOS 通信 */
+		amp_shmem_reserved: amp-shmem@3b00000 {
+			reg = <0x03b00000 0x100000>;
+			no-map;
+		};
+
+		/* RPMsg 内存 */
+		rpmsg_reserved: rpmsg@3c00000 {
+			reg = <0x03c00000 0x100000>;
+			no-map;
+		};
+
+		/* RPMsg DMA 内存 */
+		rpmsg_dma_reserved: rpmsg-dma@3d00000 {
+			compatible = "shared-dma-pool";
+			reg = <0x03d00000 0x100000>;
+			no-map;
+		};
+
+		/* MCU 内存 */
+		mcu_reserved: mcu@fff80000 {
+			reg = <0xfff80000 0xc000>;
+			no-map;
+		};
+
+		/* AMP 固件加载内存 */
+		amp_reserved: amp@3e00000 {
+			reg = <0x03e00000 0x100000>;
+			no-map;
+		};
+	};
+};
+
+#include "rk3506-amp.dtsi"
+
+&uart1 {
+	status = "disabled";
+};
+
+/*
+ * CAN0 is owned by the Zephyr AMP firmware in this image.  Keep the Linux
+ * SocketCAN device disabled to avoid concurrent register/clock/pinmux access.
+ */
+&can0 {
+	status = "disabled";
+};
+
+/* GPIO0_A2 is the Zephyr key output, not Linux PWM0_CH1. */
+&pwm0_4ch_1 {
+	status = "disabled";
+};
+
+&rockchip_amp {
+	/*
+	 * 这里列出的时钟由 rockchip_amp 在 device_initcall 阶段 enable，
+	 * late_initcall_sync 的 clk_disable_unused() 就不会关掉它们。
+	 * SPI0/SPI1/CAN0 归 CPU2 (Zephyr) 所有，Linux 侧节点都是 disabled，
+	 * 不列在这里的话，Linux 起来几秒后会把它们门控掉。
+	 */
+	clocks = <&cru HCLK_M0>, <&cru STCLK_M0>,
+		 <&cru SCLK_UART1>, <&cru PCLK_UART1>,
+		 <&cru PCLK_TIMER>, <&cru CLK_TIMER0_CH5>,
+		 <&cru PCLK_SPI0>, <&cru CLK_SPI0>,
+		 <&cru PCLK_SPI1>, <&cru CLK_SPI1>,
+		 <&cru HCLK_CAN0>, <&cru CLK_CAN0>;
+	pinctrl-names = "default";
+	pinctrl-0 = <&rm_io0_uart1_tx>, <&rm_io1_uart1_rx>;
+
+	/* 覆盖 amp-irqs: 将上游默认的 UART4 IRQ(70) 替换为 UART1 IRQ(67) */
+	amp-irqs = /bits/ 64 <
+		/* GPIO EXT */
+		GIC_AMP_IRQ_CFG_ROUTE(35, 0xd0, CPU_GET_AFFINITY(0, 2))
+		GIC_AMP_IRQ_CFG_ROUTE(39, 0xd0, CPU_GET_AFFINITY(0, 2))
+		GIC_AMP_IRQ_CFG_ROUTE(43, 0xd0, CPU_GET_AFFINITY(0, 2))
+		GIC_AMP_IRQ_CFG_ROUTE(47, 0xd0, CPU_GET_AFFINITY(0, 2))
+		GIC_AMP_IRQ_CFG_ROUTE(51, 0xd0, CPU_GET_AFFINITY(0, 2))
+		/* UART1 (GIC IRQ 67, 替换上游的 UART4 IRQ 70) */
+		GIC_AMP_IRQ_CFG_ROUTE(67, 0xd0, CPU_GET_AFFINITY(0, 2))
+		/* CAN0: Linux DTS uses GIC_SPI 45, AMP route needs IRQ 45 + 32 = 77 */
+		GIC_AMP_IRQ_CFG_ROUTE(77, 0xd0, CPU_GET_AFFINITY(0, 2))
+		/* MAILBOX */
+		GIC_AMP_IRQ_CFG_ROUTE(176, 0xd0, CPU_GET_AFFINITY(0, 2))>;
+
+};

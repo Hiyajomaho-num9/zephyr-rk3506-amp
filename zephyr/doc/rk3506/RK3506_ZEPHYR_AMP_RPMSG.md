@@ -1,5 +1,9 @@
 # RK3506 Zephyr AMP/RPMsg bring-up notes
 
+> Historical baseline report. Current image status and SDK-root commands are
+> maintained in [STATUS.md](../../../docs/rk3506/STATUS.md) and
+> [BUILD.md](../../../docs/rk3506/BUILD.md).
+
 Date: 2026-05-15
 Updated: 2026-05-16
 

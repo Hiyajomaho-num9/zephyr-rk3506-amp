@@ -1,0 +1,15 @@
+/*
+ * Debug overlay: enable gpio2 for bank-level triage (driver init, HCLK_GPIO2
+ * gate, register window). Pairs with boards/debug/gpio-shell.conf.
+ *
+ * Every gpio2 pad is Linux's on this SPI NAND board: A0..A5 are the FSPI
+ * NAND pins, B0..C0 are RMII0. Configuring a GPIO switches its IOMUX to
+ * GPIO, so all pins stay reserved and the shell cannot touch them. The
+ * loopback pair is GPIO3_A6/A7, see enable_gpio3.overlay.
+ */
+#include <zephyr/dt-bindings/gpio/gpio.h>
+
+&gpio2 {
+	status = "okay";
+	gpio-reserved-ranges = <0 17>;
+};

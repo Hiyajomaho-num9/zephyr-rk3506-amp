@@ -1,5 +1,8 @@
 # RK3506 BSP metadata audit
 
+> Historical metadata audit for the former layout. Current requirements and
+> validation status are in [BSP-CHECKLIST.md](../../../../docs/rk3506/BSP-CHECKLIST.md).
+
 Date: 2026-05-16
 
 ## Scope

@@ -1,5 +1,8 @@
 # RK3506 CAN Bring-up Notes
 
+> 历史基线及验收记录。以下阶段状态对应当时的镜像；当前 SDK 根目录、新版镜像和复验待办见
+> [STATUS.md](../../../../docs/rk3506/STATUS.md)，构建入口见 [BUILD.md](../../../../docs/rk3506/BUILD.md)。
+
 状态：Phase 7.7 已通过真实外部链路验证：Linux 用户态经 RPMsg 调 Zephyr CPU2，
 Zephyr CAN driver 通过标准 CAN API 控制 CAN0，与 STM32G4 完成 Classical CAN
 TX/RX/filter/IRQ 路径。当前进入 Phase 7.8：收敛为 upstream-ready BSP 形态，

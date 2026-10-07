@@ -1,0 +1,1 @@
+../scripts/mk-rk3506-tools.sh
