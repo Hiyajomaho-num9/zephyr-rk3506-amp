@@ -10,18 +10,6 @@
 - `output/`：构建产物，`output/releases/`：镜像归档。
 - `archive/`：迁移前备份和废弃工程，不参与构建。
 
-统一构建入口：`./build.sh`。默认配置为 OK3506-S-MINI NAND + Zephyr AMP，应用为 RPMsg pingpong。
-
-## 几天后回来，从这里接上
-
-2026-10-06 已重新核对源码、Claude 交接原文、构建日志和镜像校验。
-随后按 SPI 测试目标重新出包：最新归档为 2026-10-06 的 SPI0/SPI1 内部回环完整升级包，尚未上板。
-时钟持有与 PWM 冲突修复已进镜像，Linux GIC 清 AMP 中断使能仍待修。
-
-先读 [当前状态和下一步](docs/rk3506/STATUS.md)，再按
-[测试应用与镜像对照](docs/rk3506/testing/README.md) 选择目标。
-本轮源码修改和迁移的分组见 [改动地图](docs/rk3506/CHANGES.md)。
-
 ## 开始开发
 
 ```sh
